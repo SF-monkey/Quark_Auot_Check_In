@@ -34,22 +34,30 @@
 > user字段是用户名 (可是随意填写，多账户方便区分)
 
 2. **添加到 GitHub Secrets**
-   - 打开你的 Fork 仓库，进入 **Settings -> Secrets and variables -> Actions**。
-   - 点击 **New repository secret** 按钮，创建一个名为 `COOKIE_QUARK` 的 Secret。
+   - 打开你的 Fork 仓库，进入 **Settings -> Secrets and variables -> Actions**
+   - 点击 **New repository secret** 按钮，创建一个名为 `COOKIE_QUARK` 的 Secret
    - 将刚才配置好的 Cookie 粘贴到值中，保存。
 
-### 3. 启用 GitHub Actions
+### 3. 获取 PushPlus Token 用于推送签到结果到微信
+1. 访问 [PushPlus](https://www.pushplus.plus/) 并注册登录，按流程可能需要微信关注PushPlus公众号
+2. 在 PushPlus 点击头像进入个人信息页面，复制你的**token**
+3. 打开你的 Fork 仓库，进入 **Settings -> Secrets and variables -> Actions**
+4. 点击 **New repository secret** 按钮，创建一个名为 `PUSHPLUS_TOKEN` 的 Secret
+5. 将你的 token 粘贴到值中，保存。
+
+### 4. 启用 GitHub Actions
 
 1. 在你的仓库中，进入 **Actions** 选项卡。
 2. 启用 GitHub Actions，会看到 `Quark Sign-in` 工作流已配置完成。
 3. 系统会每天自动执行签到脚本，并输出签到结果。
 
-### 4. 手动测试运行
+### 5. 手动测试运行
 
 如果想立即测试签到脚本是否配置成功，可以手动触发执行：
 
 1. 进入 **Actions** 选项卡，点击 `Quark Sign-in`。
 2. 点击右侧的 **Run workflow**，手动触发一次签到任务，检查是否成功运行。
+3. 到手机微信查收PushPlus推送是否正常。
 
 ### 常见问题
 
