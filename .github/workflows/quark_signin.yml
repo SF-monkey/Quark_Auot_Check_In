@@ -29,14 +29,11 @@ jobs:
 
       - name: Read output file
         id: read_output
-        run: echo "OUTPUT=$(jq -Rs . < output.txt)" >> $GITHUB_ENV
+        run: echo "OUTPUT=$(cat output.txt | base64 -w 0)" >> $GITHUB_ENV
 
       - name: Send result to WeChat via PushPlus
         env:
           PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
         run: |
-          curl -X POST "https://www.pushplus.plus/send" \
-            -d "token=$PUSHPLUS_TOKEN" \
-            -d "title=Quark签到通知" \
-            -d "content=$OUTPUT" \
-            -d "template=txt"
+          OUTPUT_DECODED=$(echo $OUTPUT | base64 -d)
+          curl -X POST "https://www.pushplus.plus/send" -d "token=$PUSHPLUS_TOKEN" -d "title=Quark签到通知" -d "content=$OUTPUT_DECODED" -d "template=txt"
