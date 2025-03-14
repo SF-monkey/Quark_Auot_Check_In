@@ -26,3 +26,17 @@ jobs:
           COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}
         run: |
           python checkIn_Quark.py
+          
+      - name: Send output to WeChat via PushPlus
+        if: always()  # 无论任务成功或失败都发送消息
+        env:
+          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+        run: |
+          OUTPUT="${{ steps.run-script.outputs.output }}"
+          curl -X POST "https://www.pushplus.plus/send" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "token": "'"$PUSHPLUS_TOKEN"'",
+              "title": "夸克签到结果",
+              "content": "'"$OUTPUT"'"
+            }'
