@@ -2,41 +2,60 @@ name: Quark Sign-in
 
 on:
   schedule:
-    - cron: '0 1 * * *'  # 每天 UTC 时间 1:00 执行，即北京时间 9:00
-
-  workflow_dispatch:  # 手动触发
+    - cron: '0 0 * * *'  # 每天 UTC 时间 00:00 运行
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
-  sign-in:
+  run-quark-sign:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout repository
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'  # 使用你需要的 Python 版本
 
-      - name: Install dependencies
-        run: pip install requests
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests  # 安装脚本所需的依赖
 
-      - name: Run Quark Sign-in
-        env:
-          COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}
-        run: |
-          python checkIn_Quark.py
+    - name: Add COOKIE_QUARK environment variable
+      env:
+        COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}  # 从 GitHub Secrets 中读取 COOKIE_QUARK
+      run: |
+        echo "COOKIE_QUARK=$COOKIE_QUARK" >> $GITHUB_ENV
+
+    - name: Run Quark sign script
+      id: run-script
+      run: |
+        output=$(python -c "from your_script import main; print(main())")
+        echo "::set-output name=output::$output"
+
+    - name: Check output
+      run: |
+        if [[ "${{ steps.run-script.outputs.output }}" == *"❌"* ]]; then
+          echo "❌ 签到失败，输出包含错误信息"
+          echo "${{ steps.run-script.outputs.output }}"
+          exit 1
+        else
+          echo "✅ 签到成功"
+          echo "${{ steps.run-script.outputs.output }}"
+        fi
           
-      - name: Send output to WeChat via PushPlus
-        if: always()  # 无论任务成功或失败都发送消息
-        env:
-          PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
-        run: |
-          OUTPUT="${{ steps.run-script.outputs.output }}"
-          curl -X POST "https://www.pushplus.plus/send" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "token": "'"$PUSHPLUS_TOKEN"'",
-              "title": "夸克签到结果",
-              "content": "'"$OUTPUT"'"
-            }'
+    - name: Send output to WeChat via PushPlus
+      if: always()  # 无论任务成功或失败都发送消息
+      env:
+        PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
+      run: |
+        OUTPUT="${{ steps.run-script.outputs.output }}"
+        curl -X POST "https://www.pushplus.plus/send" \
+          -H "Content-Type: application/json" \
+          -d '{
+            "token": "'"$PUSHPLUS_TOKEN"'",
+            "title": "夸克签到结果",
+            "content": "'"$OUTPUT"'"
+          }'
