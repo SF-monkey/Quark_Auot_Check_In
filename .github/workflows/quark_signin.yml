@@ -32,7 +32,7 @@ jobs:
     - name: Run Quark sign script
       id: run-script
       run: |
-        output=$(python -c "from your_script import main; print(main())")
+        output=$(python -c "from checkIn_Quark import main; print(main())")
         echo "::set-output name=output::$output"
 
     - name: Check output
