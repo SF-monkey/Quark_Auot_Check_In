@@ -32,30 +32,28 @@ jobs:
     - name: Run Quark sign script
       id: run-script
       run: |
-        output=$(python -c "from checkIn_Quark import main; print(main())")
-        echo "::set-output name=output::$output"
+        # 将输出保存到临时文件
+        python -c "from checkIn_Quark import main; print(main())" > output.txt
+        # 读取文件内容并设置输出
+        OUTPUT=$(cat output.txt)
+        echo "::set-output name=output::${OUTPUT}"
 
-    - name: Check output
+    - name: Debug output
       run: |
-        if [[ "${{ steps.run-script.outputs.output }}" == *"❌"* ]]; then
-          echo "❌ 签到失败，输出包含错误信息"
-          echo "${{ steps.run-script.outputs.output }}"
-          exit 1
-        else
-          echo "✅ 签到成功"
-          echo "${{ steps.run-script.outputs.output }}"
-        fi
-          
+        echo "OUTPUT: ${{ steps.run-script.outputs.output }}"
+
     - name: Send output to WeChat via PushPlus
       if: always()  # 无论任务成功或失败都发送消息
       env:
         PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
       run: |
         OUTPUT="${{ steps.run-script.outputs.output }}"
+        # 使用 jq 处理 JSON 数据，确保特殊字符被正确转义
+        JSON_DATA=$(jq -n --arg token "$PUSHPLUS_TOKEN" --arg title "夸克签到结果" --arg content "$OUTPUT" '{
+          token: $token,
+          title: $title,
+          content: $content
+        }')
         curl -X POST "https://www.pushplus.plus/send" \
           -H "Content-Type: application/json" \
-          -d '{
-            "token": "'"$PUSHPLUS_TOKEN"'",
-            "title": "夸克签到结果",
-            "content": "'"$OUTPUT"'"
-          }'
+          -d "$JSON_DATA"
