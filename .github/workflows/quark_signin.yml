@@ -2,59 +2,32 @@ name: Quark Sign-in
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 时间 00:00 运行
-  workflow_dispatch:  # 允许手动触发
+    - cron: '0 1 * * *'  # 每天 UTC 时间 1:00 执行，即北京时间 9:00
+  workflow_dispatch:  # 手动触发
 
 jobs:
-  run-quark-sign:
+  sign-in:
     runs-on: ubuntu-latest
-
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.x'  # 使用你需要的 Python 版本
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests  # 安装脚本所需的依赖
+      - name: Install dependencies
+        run: pip install requests
 
-    - name: Add COOKIE_QUARK environment variable
-      env:
-        COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}  # 从 GitHub Secrets 中读取 COOKIE_QUARK
-      run: |
-        echo "COOKIE_QUARK=$COOKIE_QUARK" >> $GITHUB_ENV
+      - name: Run Quark Sign-in
+        id: run-script
+        env:
+          COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}
+        run: |
+          OUTPUT=$(python checkIn_Quark.py)
+          echo "output=${OUTPUT}" >> $GITHUB_OUTPUT
 
-    - name: Run Quark sign script
-      id: run-script
-      run: |
-        # 将输出保存到临时文件
-        python -c "from checkIn_Quark import main; print(main())" > output.txt
-        # 读取文件内容并设置输出
-        OUTPUT=$(cat output.txt)
-        echo "output=${OUTPUT}" >> $GITHUB_OUTPUT
-
-    - name: Debug output
-      run: |
-        echo "OUTPUT:"
-        cat output.txt  # 直接打印文件内容
-
-    - name: Send output to WeChat via PushPlus
-      if: always()  # 无论任务成功或失败都发送消息
-      env:
-        PUSHPLUS_TOKEN: ${{ secrets.PUSHPLUS_TOKEN }}
-      run: |
-        OUTPUT="${{ steps.run-script.outputs.output }}"
-        # 使用 jq 处理 JSON 数据，确保特殊字符被正确转义
-        JSON_DATA=$(jq -n --arg token "$PUSHPLUS_TOKEN" --arg title "夸克签到结果" --arg content "$OUTPUT" '{
-          token: $token,
-          title: $title,
-          content: $content
-        }')
-        curl -X POST "https://www.pushplus.plus/send" \
-          -H "Content-Type: application/json" \
-          -d "$JSON_DATA"
+      - name: Debug output
+        run: |
+          echo "OUTPUT: ${{ steps.run-script.outputs.output }}"
