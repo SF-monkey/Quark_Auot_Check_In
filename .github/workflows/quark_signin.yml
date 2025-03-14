@@ -36,11 +36,12 @@ jobs:
         python -c "from checkIn_Quark import main; print(main())" > output.txt
         # 读取文件内容并设置输出
         OUTPUT=$(cat output.txt)
-        echo "::set-output name=output::${OUTPUT}"
+        echo "output=${OUTPUT}" >> $GITHUB_OUTPUT
 
     - name: Debug output
       run: |
-        echo "OUTPUT: ${{ steps.run-script.outputs.output }}"
+        echo "OUTPUT:"
+        cat output.txt  # 直接打印文件内容
 
     - name: Send output to WeChat via PushPlus
       if: always()  # 无论任务成功或失败都发送消息
