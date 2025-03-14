@@ -26,6 +26,7 @@ jobs:
           COOKIE_QUARK: ${{ secrets.COOKIE_QUARK }}
         run: |
           python checkIn_Quark.py > output.txt 2>&1
+          cat output.txt
 
       - name: Read output file
         id: read_output
