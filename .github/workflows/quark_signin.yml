@@ -38,3 +38,5 @@ jobs:
         run: |
           OUTPUT_DECODED=$(echo $OUTPUT | base64 -d)
           curl -X POST "https://www.pushplus.plus/send" -d "token=$PUSHPLUS_TOKEN" -d "title=Quark签到通知" -d "content=$OUTPUT_DECODED" -d "template=txt"
+    outputs:
+      failure: ${{ job.status == 'failure' }}
