@@ -1,0 +1,21 @@
+name: Retry Failed Job
+
+on:
+  workflow_run:
+    workflows: ["CheckIn Quark"]
+    types:
+      - completed
+
+jobs:
+  retry:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'failure' }}
+    steps:
+      - name: Wait before retrying
+        run: sleep 600  # 等待 600 秒（10 分钟）
+
+      - name: Trigger retry
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: CheckIn Quark
+          token: ${{ secrets.GITHUB_TOKEN }}
