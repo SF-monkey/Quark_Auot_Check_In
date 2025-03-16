@@ -2,7 +2,7 @@ name: Retry Failed Job
 
 on:
   workflow_run:
-    workflows: ["CheckIn Quark"]
+    workflows: ["Quark Sign-in"]
     types:
       - completed
 
@@ -17,5 +17,5 @@ jobs:
       - name: Trigger retry
         uses: benc-uk/workflow-dispatch@v1
         with:
-          workflow: CheckIn Quark
+          workflow: Quark Sign-in
           token: ${{ secrets.GITHUB_TOKEN }}
